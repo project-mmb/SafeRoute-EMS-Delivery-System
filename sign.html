@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AeroReach – Sign Up</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container" id="signup-container">
+    <!-- JS will fill this -->
+  </div>
+
+  <script>
+    const role = localStorage.getItem('role');
+    const container = document.getElementById('signup-container');
+
+    if (role === 'user') {
+      container.innerHTML = `
+        <h2>User Sign Up</h2>
+        <input id="name" placeholder="Name" />
+        <input id="location" placeholder="Location / Village" />
+        <button onclick="finishSignup()">Continue</button>
+      `;
+    } else {
+      container.innerHTML = `
+        <h2>Responder Sign Up</h2>
+        <input id="name" placeholder="Name" />
+        <input id="org" placeholder="Organisation / Clinic" />
+        <button onclick="finishSignup()">Continue</button>
+      `;
+    }
+
+    function finishSignup() {
+      if (role === 'user') {
+        window.location.href = 'user-hub.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+  </script>
+</body>
+</html>
