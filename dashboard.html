@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AeroReach — Responder Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <div class="card card--wide">
+      <div class="brand brand--row">
+        <div class="brand__logo" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="white" stroke-opacity="0.12" />
+            <path d="M7 12h10M12 7v10" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="title">Responder Dashboard</h2>
+          <p class="subtitle">Manage incoming requests & availability</p>
+        </div>
+      </div>
+
+      <section id="responder-info" class="info-grid">
+        <!-- filled by JS -->
+      </section>
+
+      <div class="actions">
+        <button class="primary" onclick="simulateIncoming()">Simulate Request</button>
+        <button class="secondary" onclick="clearAndBack()">Sign out</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    initResponderDashboard();
+  </script>
+</body>
+</html>
