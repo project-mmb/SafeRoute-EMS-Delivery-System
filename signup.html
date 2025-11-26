@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AeroReach – Sign Up</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container" id="signup-container">
+    <!-- JS will inject the correct form -->
+  </div>
+
+  <script>
+    const role = localStorage.getItem('role');
+    const container = document.getElementById('signup-container');
+
+    if (!role) {
+      // If someone opens this page directly, send them back
+      window.location.href = 'index.html';
+    }
+
+    if (role === 'user') {
+      container.innerHTML = `
+        <h2>User Sign Up</h2>
+        <p class="subtitle">Person requesting medical support</p>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input id="user-name" type="text" placeholder="Enter your full name" />
+        </div>
+
+        <div class="form-group">
+          <label>Age</label>
+          <input id="user-age" type="number" min="1" placeholder="Your age" />
+          <small id="age-error" class="error-msg"></small>
+        </div>
+
+        <div class="form-group">
+          <label>Medical Focus</label>
+          <select id="user-focus">
+            <option value="">Select one</option>
+            <option value="chronic">Chronic illness</option>
+            <option value="postpartum">Postpartum support</option>
+            <option value="general">General medical needs</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Medical Record / ID (optional)</label>
+          <input id="user-med-id" type="text" placeholder="File number or national ID (optional)" />
+        </div>
+
+        <p class="disclaimer">
+          AeroReach is for medical support only. Misuse may result in access removal.
+        </p>
+
+        <button class="primary full-width" onclick="submitUser()">Continue</button>
+      `;
+    } else if (role === 'responder') {
+      container.innerHTML = `
+        <h2>Responder Sign Up</h2>
+        <p class="subtitle">Healthcare provider / clinic / organization</p>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input id="resp-name" type="text" placeholder="Enter your full name" />
+        </div>
+
+        <div class="form-group">
+          <label>Organization Name</label>
+          <input id="resp-org" type="text"
+            placeholder="e.g. Princess Marina Hospital, Botswana Red Cross, Campus Clinic" />
+        </div>
+
+        <div class="form-group">
+          <label>Role</label>
+          <select id="resp-role">
+            <option value="">Select your role</option>
+            <option value="doctor">Doctor</option>
+            <option value="nurse">Nurse</option>
+            <option value="medic">Medic</option>
+            <option value="paramedic">Paramedic</option>
+            <option value="dispatcher">Dispatcher</option>
+            <option value="volunteer">Volunteer</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Contact Email</label>
+          <input id="resp-email" type="email" placeholder="example@clinic.org" />
+        </div>
+
+        <p class="disclaimer">
+          AeroReach is for medical support only. Misuse may result in access removal.
+        </p>
+
+        <button class="primary full-width" onclick="submitResponder()">Continue</button>
+      `;
+    }
+
+    // 🔴 USER SUBMIT + AGE VALIDATION
+    function submitUser() {
+      const name = document.getElementById('user-name').value.trim();
+      const ageValue = document.getElementById('user-age').value;
+      const focus = document.getElementById('user-focus').value;
+      const medId = document.getElementById('user-med-id').value.trim();
+      const ageError = document.getElementById('age-error');
+
+      ageError.textContent = '';
+
+      if (!name) {
+        alert('Please enter your full name.');
+        return;
+      }
+
+      const age = Number(ageValue);
+      if (!ageValue || isNaN(age)) {
+        alert('Please enter your age.');
+        return;
+      }
+
+      if (age < 13) {
+        ageError.textContent =
+          'AeroReach is for medical support only. Please ask a parent, guardian, or health worker to assist you.';
+        return;
+      }
+
+      if (!focus) {
+        alert('Please select your medical focus.');
+        return;
+      }
+
+      // Save locally for now (Firebase will be handled by teammate 3)
+      const userData = { name, age, focus, medId };
+      localStorage.setItem('aeroreach_user', JSON.stringify(userData));
+
+      // Go to user hub
+      window.location.href = 'user-hub.html';
+    }
+
+    // 🔵 RESPONDER SUBMIT
+    function submitResponder() {
+      const name = document.getElementById('resp-name').value.trim();
+      const org = document.getElementById('resp-org').value.trim();
+      const roleVal = document.getElementById('resp-role').value;
+      const email = document.getElementById('resp-email').value.trim();
+
+      if (!name || !org || !roleVal || !email) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      const respData = { name, org, role: roleVal, email };
+      localStorage.setItem('aeroreach_responder', JSON.stringify(respData));
+
+      // Go to responder dashboard
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>
