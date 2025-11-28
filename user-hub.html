@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AeroReach — My Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    margin:0;
+    background:#eff3ff;
+    font-family:"Inter",sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .wrap{
+    width:480px;
+  }
+
+  /* HEADER */
+  .hero{
+    background:linear-gradient(135deg,#2563eb,#1e3a8a);
+    color:white;
+    border-radius:20px;
+    padding:26px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.15);
+    margin-bottom:22px;
+  }
+
+  .hero h1{
+    margin:0;
+    font-size:22px;
+    font-weight:700;
+  }
+
+  .hero small{
+    font-size:13px;
+    opacity:.85;
+  }
+
+  .card{
+    background:white;
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:20px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.05);
+  }
+
+  .row{
+    display:flex;
+    justify-content:space-between;
+    margin:6px 0;
+  }
+  .label{
+    color:#6b7280;
+    font-size:13px;
+  }
+  .value{
+    font-size:14px;
+    font-weight:600;
+  }
+
+  .btn{
+    padding:14px;
+    margin-top:10px;
+    text-align:center;
+    font-weight:600;
+    border-radius:14px;
+    cursor:pointer;
+    background:#2563eb;
+    color:white;
+  }
+  .btn:hover{
+    background:#1d4ed8;
+  }
+
+  .action-grid{
+    display:grid;
+    gap:12px;
+    margin-top:20px;
+  }
+  .action-box{
+    background:white;
+    padding:14px;
+    border-radius:14px;
+    border:1px solid #d1d5db;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .action-box:hover{
+    border-color:#2563eb; color:#2563eb;
+  }
+
+  .status{
+    margin-top:16px;
+    padding:14px;
+    border-radius:14px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    text-align:center;
+    font-weight:600;
+  }
+
+  /* Tips section */
+  .tips{
+    margin-top:24px;
+    padding:18px;
+    background:white;
+    border-radius:18px;
+    box-shadow:0 6px 22px rgba(0,0,0,.06);
+  }
+  .tip-head{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:6px;
+    color:#2563eb;
+  }
+  .tip-item{
+    font-size:13px;
+    color:#374151;
+    margin-bottom:10px;
+    line-height:1.4;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Hello, <span id="nameTag"></span></h1>
+    <small>Your safety comes first 💙🚁</small>
+  </div>
+
+  <div class="card">
+    <div class="row"><div class="label">Village:</div><div class="value" id="village">—</div></div>
+    <div class="row"><div class="label">Condition:</div><div class="value" id="cond">—</div></div>
+    <div class="row"><div class="label">GPS:</div><div class="value" id="gps">Checking…</div></div>
+  </div>
+
+  <div class="btn" onclick="goEmergency()">🚨 Report Emergency</div>
+
+  <div class="action-grid">
+    <div class="action-box" onclick="alert('Drone delivery coming soon!')">📦 Request Medical Kit</div>
+    <div class="action-box" onclick="alert('Medicine scheduling coming soon!')">💊 Medication Refill</div>
+    <div class="action-box" onclick="alert('Clinic map coming soon!')">🏥 Nearby Clinics</div>
+  </div>
+
+  <div class="status" id="statusBox">No active emergency</div>
+
+  <!-- HEALTH TIPS -->
+  <div class="tips">
+    <div class="tip-head">Emergency Tips</div>
+
+    <div class="tip-item">🩸 <b>Heavy bleeding:</b> Apply pressure, elevate, don’t remove soaked dressings.</div>
+    <div class="tip-item">🌬️ <b>Asthma:</b> Sit upright, calm, use inhaler (max 10 puffs).</div>
+    <div class="tip-item">🤒 <b>Fever:</b> Hydrate, rest. >38.5°C → call help.</div>
+    <div class="tip-item">🔥 <b>Burn:</b> Cool water 10–20 min. Don’t pop blisters.</div>
+    <div class="tip-item">👶 <b>Postpartum:</b> Heavy bleeding → lie down, call clinic.</div>
+    <div class="tip-item">🛑 <b>GBV:</b> Get safe, don’t wash evidence, contact help.</div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+const config = {
+  apiKey: "AIzaSyDgEH4QnHBLWzg54MNexYZJaATpRHFC_DA",
+  authDomain: "aeroreach-5d4ae.firebaseapp.com",
+  databaseURL: "https://aeroreach-5d4ae-default-rtdb.firebaseio.com",
+  projectId: "aeroreach-5d4ae",
+  storageBucket: "aeroreach-5d4ae.appspot.com",
+  messagingSenderId: "477756305528",
+  appId: "1:477756305528:web:470f50f591bee98e3e3d8d"
+};
+
+firebase.initializeApp(config);
+const db = firebase.database();
+
+/* -------- USER AUTH CHECK ---------- */
+const uid = localStorage.getItem("uid");
+if(!uid){
+  window.location="signup.html";
+}
+
+/* -------- USER DATA ---------- */
+db.ref("users/"+uid).once("value", snap => {
+  const d = snap.val();
+  if(!d){
+    window.location="signup.html";
+    return;
+  }
+  nameTag.innerText = d.name;
+  village.innerText = d.village;
+  cond.innerText = d.medical;
+  gps.innerText = d.gps ? "📍 GPS Stored" : "No GPS";
+});
+
+/* -------- ACTIVE EMERGENCY ---------- */
+db.ref("alerts").orderByChild("userId").equalTo(uid).on("value",snap=>{
+  if(!snap.exists()){
+    statusBox.innerText="No active emergency.";
+    return;
+  }
+  let arr=[];
+  snap.forEach(x=>arr.push(x.val()));
+  arr.sort((a,b)=>b.createdAt-a.createdAt);
+  statusBox.innerText="🚁 Emergency Status: "+arr[0].status;
+});
+
+/* -------- NAVIGATION ---------- */
+function goEmergency(){
+  window.location="emergency.html";
+}
+</script>
+
+</body>
+</html>

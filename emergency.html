@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AeroReach — Emergency Request</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:#e6eeff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+
+  .box{
+    width:480px;
+    background:white;
+    padding:26px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 12px 28px rgba(0,0,0,0.08);
+  }
+
+  h2{
+    font-size:22px;
+    margin-bottom:4px;
+  }
+
+  p{
+    font-size:14px;
+    color:#6b7280;
+    margin-bottom:22px;
+  }
+
+  .option{
+    padding:12px;
+    border-radius:14px;
+    background:#f3f4f6;
+    border:1px solid transparent;
+    margin:6px 0;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .option:hover{
+    border-color:#2563eb;
+  }
+
+  button{
+    background:#2563eb;
+    color:white;
+    padding:14px;
+    width:100%;
+    margin-top:10px;
+    border-radius:12px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  button:hover{
+    background:#1d4ed8;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2 id="title">AeroReach Emergency</h2>
+  <p id="subtitle">Tell us what's happening</p>
+
+  <div id="options"></div>
+</div>
+
+<!-- Firebase v8 LIBRARIES -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDgEH4QnHBLWzg54MNexYZJaATpRHFC_DA",
+  authDomain: "aeroreach-5d4ae.firebaseapp.com",
+  databaseURL: "https://aeroreach-5d4ae-default-rtdb.firebaseio.com",
+  projectId: "aeroreach-5d4ae",
+  storageBucket: "aeroreach-5d4ae.appspot.com",
+  messagingSenderId: "477756305528",
+  appId: "1:477756305528:web:470f50f591bee98e3e3d8d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* 🔒 Check authentication */
+let uid = localStorage.getItem("uid");
+if(!uid){
+  alert("Please sign up first.");
+  window.location="signup.html";
+}
+
+/* Cache user info for display */
+let userData = null;
+db.ref("users/"+uid).once("value", snap => userData = snap.val());
+
+/* Step engine */
+let data = {};
+let step = 1;
+
+/* Render steps */
+function showStep(title, subtitle, options){
+  document.getElementById("title").innerText = title;
+  document.getElementById("subtitle").innerText = subtitle;
+
+  const box = document.getElementById("options");
+  box.innerHTML = "";
+
+  options.forEach(val=>{
+    const opt = document.createElement("div");
+    opt.className="option";
+    opt.innerText = val;
+    opt.onclick = ()=>select(val);
+    box.appendChild(opt);
+  });
+}
+
+/* Handle selection */
+function select(value){
+  if(step === 1){
+    data.type = value;
+    step = 2;
+    showStep(
+      "Are you in danger?",
+      "This decides dispatch priority",
+      ["I'm safe","I feel unsafe"]
+    );
+  } else if(step === 2){
+    data.safety = value;
+    step = 3;
+    requestLocation();
+  }
+}
+
+/* Request GPS */
+function requestLocation(){
+  document.getElementById("title").innerText = "Share Location";
+  document.getElementById("subtitle").innerText = "We will dispatch help";
+
+  const box = document.getElementById("options");
+  box.innerHTML="";
+
+  const btn = document.createElement("button");
+  btn.innerText="Use GPS Location";
+  btn.onclick = grabGPS;
+  box.appendChild(btn);
+}
+
+/* Grab GPS and send */
+function grabGPS(){
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    data.gps={
+      lat:pos.coords.latitude,
+      lng:pos.coords.longitude
+    };
+
+    const ref = db.ref("alerts").push();
+    await ref.set({
+      userId: uid,
+      userName: userData.name,
+      emergencyType:data.type,
+      safety:data.safety,
+      gpsLocation:data.gps,
+      status:"Pending",
+      createdAt:Date.now()
+    });
+
+   window.location = "drone.html";
+
+  },()=>{
+    alert("Could not get GPS. Try again.");
+  });
+}
+
+/* Initial step */
+showStep(
+  "What happened?",
+  "Choose your emergency type",
+  ["Injury","Bleeding","Asthma","Medication Refill","Postpartum","GBV"]
+);
+</script>
+</body>
+</html>

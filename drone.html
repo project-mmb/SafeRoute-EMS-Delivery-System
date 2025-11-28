@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AeroReach — Drone En Route</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+
+<style>
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:#eef2ff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+
+  .card{
+    width:450px;
+    background:white;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);
+    padding:22px;
+    text-align:center;
+  }
+
+  h2{
+    margin:0 0 6px;
+    color:#1f2937;
+    font-size:20px;
+    font-weight:700;
+  }
+
+  .sub{
+    color:#6b7280;
+    font-size:14px;
+    margin-bottom:14px;
+  }
+
+  #map{
+    width:100%;
+    height:300px;
+    border-radius:14px;
+    margin-bottom:14px;
+  }
+
+  .status{
+    font-size:15px;
+    font-weight:600;
+    color:#2563eb;
+    margin-bottom:10px;
+  }
+
+  .eta{
+    font-size:13px;
+    color:#374151;
+  }
+
+  button{
+    margin-top:18px;
+    background:#2563eb;
+    color:white;
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>🚁 Help is on the way</h2>
+  <div class="sub">Your emergency has been received</div>
+
+  <div id="map"></div>
+
+  <div class="status" id="statusText">Drone dispatched...</div>
+  <div class="eta" id="etaText">Calculating ETA...</div>
+
+  <button onclick="toDashboard()">Go Back to Dashboard</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// ------------ CONFIG ------------
+const config={
+  apiKey:"AIzaSyDgEH4QnHBLWzg54MNexYZJaATpRHFC_DA",
+  authDomain:"aeroreach-5d4ae.firebaseapp.com",
+  databaseURL:"https://aeroreach-5d4ae-default-rtdb.firebaseio.com",
+  projectId:"aeroreach-5d4ae",
+  storageBucket:"aeroreach-5d4ae.appspot.com",
+  messagingSenderId:"477756305528",
+  appId:"1:477756305528:web:470f50f591bee98e3e3d8d"
+};
+firebase.initializeApp(config);
+const db=firebase.database();
+
+// ------------ USER ID ------------
+const uid = localStorage.getItem("uid");
+if(!uid){window.location="signup.html";}
+
+/* Princess Marina hub */
+const HUB = { lat:-24.656944, lng:25.923889 };
+
+// ------------ LOAD LAST ALERT ------------
+let myAlert=null;
+
+db.ref("alerts").orderByChild("userId").equalTo(uid).once("value",snap=>{
+  let list=[];
+  snap.forEach(x=>list.push({...x.val(),id:x.key}));
+  list.sort((a,b)=>b.createdAt-a.createdAt);
+  myAlert=list[0];
+
+  initMap();
+  animateDrone();
+});
+
+// ------------ MAP ------------
+let map, droneMarker;
+
+function initMap(){
+  map = new maplibregl.Map({
+    container:"map",
+    style:"https://demotiles.maplibre.org/style.json",
+    center:[HUB.lng,HUB.lat],
+    zoom:8
+  });
+
+  // Hub marker
+  new maplibregl.Marker({color:"#22c55e"})
+  .setLngLat([HUB.lng,HUB.lat])
+  .addTo(map);
+
+  // User marker
+  new maplibregl.Marker({color:"#f97316"})
+  .setLngLat([myAlert.gpsLocation.lng,myAlert.gpsLocation.lat])
+  .addTo(map);
+
+  // Drone marker
+  droneMarker=new maplibregl.Marker({color:"#2563eb"})
+  .setLngLat([HUB.lng,HUB.lat])
+  .addTo(map);
+
+  const bounds=new maplibregl.LngLatBounds();
+  bounds.extend([HUB.lng,HUB.lat]);
+  bounds.extend([myAlert.gpsLocation.lng,myAlert.gpsLocation.lat]);
+  map.fitBounds(bounds,{padding:60});
+}
+
+// ------------ ANIMATION ------------
+function animateDrone(){
+  let x=0;
+  const total=120;
+  let eta=15;
+
+  const interval=setInterval(()=>{
+    x++;
+
+    const t=x/total;
+    const lat = HUB.lat + (myAlert.gpsLocation.lat - HUB.lat)*t;
+    const lng = HUB.lng + (myAlert.gpsLocation.lng - HUB.lng)*t;
+    droneMarker.setLngLat([lng,lat]);
+
+    if(x%8===0 && eta>0){
+      eta--;
+      document.getElementById("etaText").innerText=`ETA: ${eta} min`;
+    }
+
+    if(x>=total){
+      clearInterval(interval);
+      document.getElementById("statusText").innerText="Drone Arrived ✔";
+      document.getElementById("etaText").innerText="Medical assistance is near.";
+    }
+
+  },250);
+}
+
+// ------------ NAV ------------
+function toDashboard(){
+  window.location="user-hub.html";
+}
+</script>
+</body>
+</html>
